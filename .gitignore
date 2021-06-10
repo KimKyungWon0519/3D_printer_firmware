@@ -1,0 +1,5 @@
+Project/Output/
+Project/DebugConfig/
+Project/Listing/
+*.uvoptx
+*.uvguix.*
