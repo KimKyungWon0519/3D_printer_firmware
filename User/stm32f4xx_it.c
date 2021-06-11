@@ -24,6 +24,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
 
+extern volatile unsigned long sys_count;
+extern void TimingDelay_Decrement(void);
+
 /** @addtogroup STM32F4xx_StdPeriph_Examples
   * @{
   */
@@ -139,10 +142,11 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
-/*void SysTick_Handler(void)
+void SysTick_Handler(void)
 {
-}*/
-
+	TimingDelay_Decrement();
+	sys_count++;
+}
 
 /**
   * @brief  This function handles PPP interrupt request.
