@@ -19,14 +19,18 @@ void TimingDelay_Decrement(void);
 void TIM2_IRQHandler (void);
 
 char toggle_x = 0;
-unsigned int count_x = 0;
-	
+char move_x_enable = 0;
+unsigned int step_count_x = 0;
+
 int main(void)
 {	
 	int i = 0;
-	
+
 	init();
 	
+	move_x_enable = 1;
+	step_count_x = 0;
+
 	while(1);
 }
 
@@ -55,7 +59,7 @@ void x_motor_init() {
 	GPIOF->MODER |= (0x01 << 2 * 2);			// ouput mode
 	GPIOF->OTYPER |= (0x00 << 2);					// push pull
 	GPIOF->OSPEEDR |= (0x03 << 2 * 2);	// Very high speed 
-	
+
 	/* x step ( PE9 ) */
 	GPIOE->MODER |= (0x01 << ( 9 * 2 ));		// ouput mode
 	GPIOE->OTYPER |= (0x00 << 9);						// push pull
@@ -75,30 +79,38 @@ void nvic_init() {
 }
 
 void TIM2_IRQHandler (void) {
-	 if ((TIM2->SR & 0x0001) != 0) { 
-		if(toggle_x == 0) {
-			GPIOE->ODR |= (0x01 << 9);
-			toggle_x = 1;
-		} else {
-			GPIOE->ODR &= ~(0x01 << 9);
-			toggle_x = 0;
+	if ((TIM2->SR & 0x0001) != 0) { 
+		if(move_x_enable) {
+			if(toggle_x == 0) {
+				GPIOE->ODR |= (0x01 << 9);
+				toggle_x = 1;
+			} else {
+				GPIOE->ODR &= ~(0x01 << 9);
+				toggle_x = 0;
+				
+				if(step_count_x >= 4000) {
+					RCC->APB1ENR &= ~(0x01 << 0);
+				}
+				
+				step_count_x++;
+			}
 		}
-		 
-		TIM2->SR &= ~(1<<0); // clear UIF flag
-	 }		
+
+	TIM2->SR &= ~(1<<0); // clear UIF flag
+	}		
 }
 
 void Delay(unsigned int nTime)
 { 
-  TimingDelay = nTime;
+	TimingDelay = nTime;
 
-  while(TimingDelay > 0);
+	while(TimingDelay > 0);
 }
-	
+
 void TimingDelay_Decrement(void)
 {
-  if (TimingDelay != 0x00)
-  { 
-    TimingDelay--;
-  }
+	if (TimingDelay != 0x00)
+	{ 
+		TimingDelay--;
+	}
 }
